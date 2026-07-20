@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pelastustoimi",
+        "description": "Seuraa Suomen pelastustoimen ensitiedotteita. Hakee Peto-media RSS-syötettä ja luo anturit valituille kunnille.",
+        "data": {
+          "update_interval": "Päivitysväli (minuutteina)",
+          "max_alarms": "Säilytettävien hälytysten enimmäismäärä kuntaa kohti",
+          "municipalities": "Tarkkailtavat kunnat"
+        }
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Pelastustoimen asetukset",
+          "description": "Muuta seuranta-asetuksia.",
+          "data": {
+            "update_interval": "Päivitysväli (minuutteina)",
+            "max_alarms": "Säilytettävien hälytysten enimmäismäärä kuntaa kohti",
+            "municipalities": "Tarkkailtavat kunnat"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pelastustoimi",
+        "description": "Övervakar finländska räddningsverkets första meddelanden. Hämtar Peto-media RSS-flödet och skapar sensorer för valda kommuner.",
+        "data": {
+          "update_interval": "Uppdateringsintervall (minuter)",
+          "max_alarms": "Maximalt antal larm per kommun",
+          "municipalities": "Kommuner att övervaka"
+        }
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Pelastustoimi-inställningar",
+          "description": "Ändra övervakningsinställningar.",
+          "data": {
+            "update_interval": "Uppdateringsintervall (minuter)",
+            "max_alarms": "Maximalt antal larm per kommun",
+            "municipalities": "Kommuner att övervaka"
+          }
+        }
+      }
+    }
+  }
+}
