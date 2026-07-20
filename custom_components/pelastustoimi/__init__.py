@@ -17,6 +17,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.storage import Store
 
 from .const import (
     ATTR_DESCRIPTION,
@@ -36,8 +37,10 @@ from .const import (
     EVENT_NEW_ALARM,
     RSS_URL,
 )
-
 _LOGGER = logging.getLogger(__name__)
+
+STORAGE_VERSION = 1
+STORAGE_KEY = f"{DOMAIN}.seen_alarms"
 
 PLATFORMS = ["sensor"]
 
@@ -45,7 +48,6 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({})},
     extra=vol.ALLOW_EXTRA,
 )
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pelastustoimi from a config entry."""
@@ -112,10 +114,24 @@ class PelastustoimiCoordinator:
         # Current alarms per municipality: {municipality_label: list[dict]}
         self.alarms: dict[str, list[dict[str, Any]]] = {}
 
+        # Persistent store for seen alarm keys (survives restarts)
+        self._store = Store[dict[str, list[str]]](
+            self.hass, STORAGE_VERSION, f"{STORAGE_KEY}.{self.entry.entry_id}"
+        )
         self._remove_interval: callable | None = None
 
     async def async_setup(self) -> None:
-        """Set up polling."""
+        """Set up polling. Loads persisted seen-alarms before first poll."""
+        # Restore seen alarm keys from store to avoid re-firing after restart
+        stored = await self._store.async_load()
+        if stored:
+            for label, keys in stored.items():
+                self._seen_alarms[label] = set(keys)
+            _LOGGER.debug(
+                "Loaded %d municipality alarm records from store",
+                len(stored),
+            )
+
         async def _initial_poll(_: Event | None = None) -> None:
             await self._async_update()
             self._remove_interval = async_track_time_interval(
@@ -151,6 +167,8 @@ class PelastustoimiCoordinator:
         if not feed or not feed.get("entries"):
             _LOGGER.warning("RSS feed returned no entries")
             return
+
+        _alarms_added = 0
 
         for item in feed.entries:
             title = item.get("title", "")
@@ -192,6 +210,7 @@ class PelastustoimiCoordinator:
             is_new = alarm_key not in self._seen_alarms[label]
 
             if is_new:
+                _alarms_added += 1
                 self._seen_alarms[label].add(alarm_key)
                 self.alarms[label].insert(0, alarm_data)
 
@@ -216,6 +235,18 @@ class PelastustoimiCoordinator:
                         ATTR_INCIDENT_TYPE: incident_type,
                     },
                 )
+
+        if _alarms_added > 0:
+            # Persist seen alarm keys to survive restarts
+            store_data: dict[str, list[str]] = {
+                label: sorted(keys)
+                for label, keys in self._seen_alarms.items()
+            }
+            await self._store.async_save(store_data)
+            _LOGGER.debug(
+                "Saved %d municipality alarm records to store",
+                len(store_data),
+            )
 
         # Notify sensor entities to update
         async_dispatcher_send(
