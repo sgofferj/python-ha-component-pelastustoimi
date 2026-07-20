@@ -27,9 +27,11 @@ from .const import (
     ATTR_PUB_DATE,
     ATTR_TITLE,
     CONF_INTERVAL,
+    CONF_MAX_ALARMS,
     CONF_MUNICIPALITIES,
     COORDINATOR,
     DEFAULT_INTERVAL,
+    DEFAULT_MAX_ALARMS,
     DOMAIN,
     EVENT_NEW_ALARM,
     RSS_URL,
@@ -89,6 +91,10 @@ class PelastustoimiCoordinator:
         interval_min = entry.options.get(CONF_INTERVAL, DEFAULT_INTERVAL)
         self._interval = timedelta(minutes=max(interval_min, 1))
 
+        self._max_alarms = max(
+            entry.options.get(CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS),
+            1,
+        )
         self._municipalities: list[str] = entry.options.get(
             CONF_MUNICIPALITIES, []
         )
@@ -188,6 +194,10 @@ class PelastustoimiCoordinator:
             if is_new:
                 self._seen_alarms[label].add(alarm_key)
                 self.alarms[label].insert(0, alarm_data)
+
+                # Enforce maximum kept alarms per municipality
+                while len(self.alarms[label]) > self._max_alarms:
+                    self.alarms[label].pop()
 
                 _LOGGER.debug(
                     "New alarm in %s: %s (%s)", label, title, incident_type

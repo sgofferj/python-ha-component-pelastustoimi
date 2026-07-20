@@ -4,9 +4,12 @@ DOMAIN = "pelastustoimi"
 
 CONF_INTERVAL = "update_interval"
 CONF_MUNICIPALITIES = "municipalities"
+CONF_MAX_ALARMS = "max_alarms"
 
 DEFAULT_INTERVAL = 1
 MIN_INTERVAL = 1
+DEFAULT_MAX_ALARMS = 50
+MIN_MAX_ALARMS = 1
 
 RSS_URL = "https://www.peto-media.fi/tiedotteet/rss.xml"
 

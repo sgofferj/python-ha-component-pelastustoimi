@@ -6,6 +6,7 @@
         "description": "Configure monitoring of Finnish emergency service missions (Pelastustoimi). Polls the Peto-media RSS feed and creates sensors for selected municipalities.",
         "data": {
           "update_interval": "Update interval (minutes)",
+          "max_alarms": "Maximum kept alarms per municipality",
           "municipalities": "Municipalities to monitor"
         }
       }
@@ -17,6 +18,7 @@
           "description": "Modify monitoring settings.",
           "data": {
             "update_interval": "Update interval (minutes)",
+            "max_alarms": "Maximum kept alarms per municipality",
             "municipalities": "Municipalities to monitor"
           }
         }

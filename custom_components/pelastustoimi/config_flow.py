@@ -10,10 +10,13 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_INTERVAL,
+    CONF_MAX_ALARMS,
     CONF_MUNICIPALITIES,
     DEFAULT_INTERVAL,
+    DEFAULT_MAX_ALARMS,
     DOMAIN,
     MIN_INTERVAL,
+    MIN_MAX_ALARMS,
 )
 from .municipalities import MUNICIPALITIES
 
@@ -33,6 +36,9 @@ class PelastustoimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
                 options={
                     CONF_INTERVAL: user_input.get(
                         CONF_INTERVAL, DEFAULT_INTERVAL
+                    ),
+                    CONF_MAX_ALARMS: user_input.get(
+                        CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS
                     ),
                     CONF_MUNICIPALITIES: user_input.get(
                         CONF_MUNICIPALITIES, []
@@ -55,6 +61,17 @@ class PelastustoimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
                             mode=selector.NumberSelectorMode.BOX,
                         ),
                     ),
+                    vol.Required(
+                        CONF_MAX_ALARMS, default=DEFAULT_MAX_ALARMS
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=MIN_MAX_ALARMS,
+                            max=500,
+                            step=1,
+                            unit_of_measurement="alarms",
+                            mode=selector.NumberSelectorMode.BOX,
+                        ),
+                    ),
                     vol.Optional(
                         CONF_MUNICIPALITIES, default=[]
                     ): selector.SelectSelector(
@@ -69,6 +86,7 @@ class PelastustoimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
             ),
             errors=errors,
         )
+
 
     @staticmethod
     @callback
@@ -93,6 +111,9 @@ class PelastustoimiOptionsFlow(config_entries.OptionsFlow):
         current_interval = self.config_entry.options.get(
             CONF_INTERVAL, DEFAULT_INTERVAL
         )
+        current_max_alarms = self.config_entry.options.get(
+            CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS
+        )
         current_municipalities = self.config_entry.options.get(
             CONF_MUNICIPALITIES, []
         )
@@ -109,6 +130,17 @@ class PelastustoimiOptionsFlow(config_entries.OptionsFlow):
                             max=1440,
                             step=1,
                             unit_of_measurement="minutes",
+                            mode=selector.NumberSelectorMode.BOX,
+                        ),
+                    ),
+                    vol.Required(
+                        CONF_MAX_ALARMS, default=current_max_alarms
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=MIN_MAX_ALARMS,
+                            max=500,
+                            step=1,
+                            unit_of_measurement="alarms",
                             mode=selector.NumberSelectorMode.BOX,
                         ),
                     ),
