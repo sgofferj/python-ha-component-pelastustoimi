@@ -93,10 +93,13 @@ class PelastustoimiCoordinator:
         interval_min = int(entry.options.get(CONF_INTERVAL, DEFAULT_INTERVAL))
         self._interval = timedelta(minutes=max(interval_min, 1))
 
+        raw_max = entry.options.get(CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS)
+        _LOGGER.debug("max_alarms raw value: %r (type: %s)", raw_max, type(raw_max).__name__)
         self._max_alarms = max(
-            int(entry.options.get(CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS)),
+            int(raw_max),
             1,
         )
+        _LOGGER.debug("self._max_alarms = %r (type: %s)", self._max_alarms, type(self._max_alarms).__name__)
         self._municipalities: list[str] = entry.options.get(
             CONF_MUNICIPALITIES, []
         )
@@ -138,7 +141,8 @@ class PelastustoimiCoordinator:
                     break
                 # v2 format: both seen keys and alarm data
                 self._seen_alarms[label] = set(value.get("seen", []))
-                self.alarms[label] = value.get("alarms", [])[: self._max_alarms]
+                alarm_limit = int(self._max_alarms)
+                self.alarms[label] = value.get("alarms", [])[:alarm_limit]
             else:
                 _LOGGER.debug(
                     "Loaded %d municipality alarm records from store",
