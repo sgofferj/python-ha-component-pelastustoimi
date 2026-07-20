@@ -11,7 +11,6 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,13 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_ALARMS,
-    ATTR_DESCRIPTION,
-    ATTR_INCIDENT_TYPE,
-    ATTR_MUNICIPALITY,
-    ATTR_MUNICIPALITY_FI,
-    ATTR_MUNICIPALITY_SE,
-    ATTR_PUB_DATE,
-    ATTR_TITLE,
     CONF_MUNICIPALITIES,
     COORDINATOR,
     DOMAIN,
@@ -54,7 +46,6 @@ class PelastustoimiSensor(SensorEntity):
     """Sensor for a single municipality's alarms."""
 
     _attr_has_entity_name = True
-    _attr_native_unit_of_measurement = UnitOfInformation.BITS
     _attr_should_poll = False
 
     def __init__(

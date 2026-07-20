@@ -6,7 +6,7 @@ Polls the Pelastustoimi RSS feed and creates sensor entities per municipality.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any
 
 import feedparser
@@ -15,12 +15,10 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    ATTR_ALARMS,
     ATTR_DESCRIPTION,
     ATTR_INCIDENT_TYPE,
     ATTR_MUNICIPALITY,
@@ -32,7 +30,6 @@ from .const import (
     CONF_MUNICIPALITIES,
     COORDINATOR,
     DEFAULT_INTERVAL,
-    DEVICE_INFO,
     DOMAIN,
     EVENT_NEW_ALARM,
     RSS_URL,
@@ -110,7 +107,6 @@ class PelastustoimiCoordinator:
         self.alarms: dict[str, list[dict[str, Any]]] = {}
 
         self._remove_interval: callable | None = None
-        self._ready = False
 
     async def async_setup(self) -> None:
         """Set up polling."""

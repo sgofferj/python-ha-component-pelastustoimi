@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "config_flow": true,
   "documentation": "https://github.com/sgofferj/python-ha-component-pelastustoimi",
-  "requirements": [],
+  "requirements": ["feedparser>=6.0.0"],
   "dependencies": [],
   "codeowners": ["@sgofferj"],
   "iot_class": "cloud_polling",
