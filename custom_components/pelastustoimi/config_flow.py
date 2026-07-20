@@ -77,7 +77,7 @@ class PelastustoimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=MUNICIPALITIES,
-                            mode=selector.SelectSelectorMode.MULTI,
+                            multiple=True,
                             custom_value=False,
                             sort=True,
                         ),
@@ -149,7 +149,7 @@ class PelastustoimiOptionsFlow(config_entries.OptionsFlow):
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=MUNICIPALITIES,
-                            mode=selector.SelectSelectorMode.MULTI,
+                            multiple=True,
                             custom_value=False,
                             sort=True,
                         ),
