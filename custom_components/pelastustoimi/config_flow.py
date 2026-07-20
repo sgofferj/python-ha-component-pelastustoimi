@@ -52,25 +52,31 @@ class PelastustoimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
                 {
                     vol.Required(
                         CONF_INTERVAL, default=DEFAULT_INTERVAL
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=MIN_INTERVAL,
-                            max=1440,
-                            step=1,
-                            unit_of_measurement="minutes",
-                            mode=selector.NumberSelectorMode.BOX,
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=MIN_INTERVAL,
+                                max=1440,
+                                step=1,
+                                unit_of_measurement="minutes",
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
                         ),
+                        vol.Coerce(int),
                     ),
                     vol.Required(
                         CONF_MAX_ALARMS, default=DEFAULT_MAX_ALARMS
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=MIN_MAX_ALARMS,
-                            max=500,
-                            step=1,
-                            unit_of_measurement="alarms",
-                            mode=selector.NumberSelectorMode.BOX,
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=MIN_MAX_ALARMS,
+                                max=500,
+                                step=1,
+                                unit_of_measurement="alarms",
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
                         ),
+                        vol.Coerce(int),
                     ),
                     vol.Optional(
                         CONF_MUNICIPALITIES, default=[]
@@ -124,25 +130,31 @@ class PelastustoimiOptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_INTERVAL, default=current_interval
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=MIN_INTERVAL,
-                            max=1440,
-                            step=1,
-                            unit_of_measurement="minutes",
-                            mode=selector.NumberSelectorMode.BOX,
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=MIN_INTERVAL,
+                                max=1440,
+                                step=1,
+                                unit_of_measurement="minutes",
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
                         ),
+                        vol.Coerce(int),
                     ),
                     vol.Required(
                         CONF_MAX_ALARMS, default=current_max_alarms
-                    ): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=MIN_MAX_ALARMS,
-                            max=500,
-                            step=1,
-                            unit_of_measurement="alarms",
-                            mode=selector.NumberSelectorMode.BOX,
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=MIN_MAX_ALARMS,
+                                max=500,
+                                step=1,
+                                unit_of_measurement="alarms",
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
                         ),
+                        vol.Coerce(int),
                     ),
                     vol.Optional(
                         CONF_MUNICIPALITIES, default=current_municipalities

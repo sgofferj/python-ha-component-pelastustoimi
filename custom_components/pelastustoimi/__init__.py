@@ -90,11 +90,11 @@ class PelastustoimiCoordinator:
         self.hass = hass
         self.entry = entry
 
-        interval_min = entry.options.get(CONF_INTERVAL, DEFAULT_INTERVAL)
+        interval_min = int(entry.options.get(CONF_INTERVAL, DEFAULT_INTERVAL))
         self._interval = timedelta(minutes=max(interval_min, 1))
 
         self._max_alarms = max(
-            entry.options.get(CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS),
+            int(entry.options.get(CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS)),
             1,
         )
         self._municipalities: list[str] = entry.options.get(
