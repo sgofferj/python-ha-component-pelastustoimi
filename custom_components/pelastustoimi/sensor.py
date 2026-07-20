@@ -89,10 +89,10 @@ class PelastustoimiSensor(SensorEntity):
             )
         )
         # Also update on home assistant start if data exists
-        await self._async_handle_update()
+        self._async_handle_update()
 
     @callback
-    async def _async_handle_update(self) -> None:
+    def _async_handle_update(self) -> None:
         """Update sensor state from coordinator."""
         self.async_write_ha_state()
 
