@@ -69,14 +69,14 @@ class PelastustoimiSensor(SensorEntity):
         self._attr_unique_id = (
             f"{DOMAIN}_{entry.entry_id}_{self._fi_name.lower()}"
         )
-        self._attr_icon = "mdi:siren"
+        self._attr_icon = "mdi:alarm-light"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Pelastustoimi",
             manufacturer="Suomen Pelastustoimi",
             model="Peto-media RSS",
-        self._attr_icon = "mdi:alarm-light"
+            sw_version="1.0.0",
         )
 
     async def async_added_to_hass(self) -> None:
