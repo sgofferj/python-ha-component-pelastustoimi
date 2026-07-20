@@ -39,8 +39,8 @@ from .const import (
 )
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_VERSION = 1
-STORAGE_KEY = f"{DOMAIN}.seen_alarms"
+STORAGE_VERSION = 2
+STORAGE_KEY = f"{DOMAIN}.alarm_store"
 
 PLATFORMS = ["sensor"]
 
@@ -114,23 +114,36 @@ class PelastustoimiCoordinator:
         # Current alarms per municipality: {municipality_label: list[dict]}
         self.alarms: dict[str, list[dict[str, Any]]] = {}
 
-        # Persistent store for seen alarm keys (survives restarts)
-        self._store = Store[dict[str, list[str]]](
+        # Persistent store for seen alarm keys and alarm data (survives restarts)
+        self._store = Store[dict[str, Any]](
             self.hass, STORAGE_VERSION, f"{STORAGE_KEY}.{self.entry.entry_id}"
         )
         self._remove_interval: callable | None = None
 
     async def async_setup(self) -> None:
-        """Set up polling. Loads persisted seen-alarms before first poll."""
-        # Restore seen alarm keys from store to avoid re-firing after restart
+        """Set up polling. Loads persisted seen-alarms and alarm data before first poll."""
+        # Restore seen alarm keys and alarm data from store
         stored = await self._store.async_load()
         if stored:
-            for label, keys in stored.items():
-                self._seen_alarms[label] = set(keys)
-            _LOGGER.debug(
-                "Loaded %d municipality alarm records from store",
-                len(stored),
-            )
+            for label, value in stored.items():
+                if isinstance(value, list):
+                    # v1 format: just seen alarm keys, no alarm data.
+                    # Don't load — let the first poll re-process everything.
+                    self._seen_alarms.clear()
+                    self.alarms.clear()
+                    _LOGGER.warning(
+                        "Migrating from v1 store format: alarm data will be "
+                        "re-fetched on next poll"
+                    )
+                    break
+                # v2 format: both seen keys and alarm data
+                self._seen_alarms[label] = set(value.get("seen", []))
+                self.alarms[label] = value.get("alarms", [])[: self._max_alarms]
+            else:
+                _LOGGER.debug(
+                    "Loaded %d municipality alarm records from store",
+                    len(stored),
+                )
 
         async def _initial_poll(_: Event | None = None) -> None:
             await self._async_update()
@@ -237,11 +250,13 @@ class PelastustoimiCoordinator:
                 )
 
         if _alarms_added > 0:
-            # Persist seen alarm keys to survive restarts
-            store_data: dict[str, list[str]] = {
-                label: sorted(keys)
-                for label, keys in self._seen_alarms.items()
-            }
+            # Persist seen alarm keys and alarm data to survive restarts
+            store_data: dict[str, dict[str, Any]] = {}
+            for label, seen_set in self._seen_alarms.items():
+                store_data[label] = {
+                    "seen": sorted(seen_set),
+                    "alarms": self.alarms.get(label, []),
+                }
             await self._store.async_save(store_data)
             _LOGGER.debug(
                 "Saved %d municipality alarm records to store",
