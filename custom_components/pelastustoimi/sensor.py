@@ -76,7 +76,7 @@ class PelastustoimiSensor(SensorEntity):
             name="Pelastustoimi",
             manufacturer="Suomen Pelastustoimi",
             model="Peto-media RSS",
-            sw_version="1.0.0",
+        self._attr_icon = "mdi:alarm-light"
         )
 
     async def async_added_to_hass(self) -> None:
