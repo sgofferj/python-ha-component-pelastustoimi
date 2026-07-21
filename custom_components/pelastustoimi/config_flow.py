@@ -10,12 +10,15 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_INTERVAL,
+    CONF_MAX_AGE,
     CONF_MAX_ALARMS,
     CONF_MUNICIPALITIES,
     DEFAULT_INTERVAL,
+    DEFAULT_MAX_AGE,
     DEFAULT_MAX_ALARMS,
     DOMAIN,
     MIN_INTERVAL,
+    MIN_MAX_AGE,
     MIN_MAX_ALARMS,
 )
 from .municipalities import MUNICIPALITIES
@@ -39,6 +42,9 @@ class PelastustoimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
                     ),
                     CONF_MAX_ALARMS: user_input.get(
                         CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS
+                    ),
+                    CONF_MAX_AGE: user_input.get(
+                        CONF_MAX_AGE, DEFAULT_MAX_AGE
                     ),
                     CONF_MUNICIPALITIES: user_input.get(
                         CONF_MUNICIPALITIES, []
@@ -73,6 +79,20 @@ class PelastustoimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
                                 max=500,
                                 step=1,
                                 unit_of_measurement="alarms",
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
+                        ),
+                        vol.Coerce(int),
+                    ),
+                    vol.Optional(
+                        CONF_MAX_AGE, default=DEFAULT_MAX_AGE
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=MIN_MAX_AGE,
+                                max=720,
+                                step=1,
+                                unit_of_measurement="hours",
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),
@@ -120,6 +140,9 @@ class PelastustoimiOptionsFlow(config_entries.OptionsFlow):
         current_max_alarms = self.config_entry.options.get(
             CONF_MAX_ALARMS, DEFAULT_MAX_ALARMS
         )
+        current_max_age = self.config_entry.options.get(
+            CONF_MAX_AGE, DEFAULT_MAX_AGE
+        )
         current_municipalities = self.config_entry.options.get(
             CONF_MUNICIPALITIES, []
         )
@@ -151,6 +174,20 @@ class PelastustoimiOptionsFlow(config_entries.OptionsFlow):
                                 max=500,
                                 step=1,
                                 unit_of_measurement="alarms",
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
+                        ),
+                        vol.Coerce(int),
+                    ),
+                    vol.Optional(
+                        CONF_MAX_AGE, default=current_max_age
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=MIN_MAX_AGE,
+                                max=720,
+                                step=1,
+                                unit_of_measurement="hours",
                                 mode=selector.NumberSelectorMode.BOX,
                             ),
                         ),

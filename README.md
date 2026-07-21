@@ -91,7 +91,10 @@ pylint custom_components/pelastustoimi/
 
 ## Disclaimer
 
-This integration provides near-real-time information about emergency service missions. Always verify critical information from official sources. The author(s) assume no liability for the accuracy, completeness, or timeliness of the data provided.
+This is **not an official product** of the Finnish Emergency Services (Pelastustoimi) or Peto-media.
+The author is not affiliated with, endorsed by, or connected to these organizations.
+This integration is provided "as is" without warranty of any kind, express or implied.
+Always verify critical information from official sources.
 
 ## AI Use Disclosure
 

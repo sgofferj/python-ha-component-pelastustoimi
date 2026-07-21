@@ -74,8 +74,8 @@ class PelastustoimiSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Pelastustoimi",
-            manufacturer="Suomen Pelastustoimi",
-            model="Peto-media RSS",
+            manufacturer="Stefan Gofferje",
+            model="RSS Alarm Monitor",
             sw_version="1.0.0",
         )
 

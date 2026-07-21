@@ -7,6 +7,7 @@
         "data": {
           "update_interval": "Update interval (minutes)",
           "max_alarms": "Maximum kept alarms per municipality",
+          "max_age": "Discard alarms older than (hours, 0 = off)",
           "municipalities": "Municipalities to monitor"
         }
       }
@@ -19,6 +20,7 @@
           "data": {
             "update_interval": "Update interval (minutes)",
             "max_alarms": "Maximum kept alarms per municipality",
+            "max_age": "Discard alarms older than (hours, 0 = off)",
             "municipalities": "Municipalities to monitor"
           }
         }

@@ -6,8 +6,9 @@ Polls the Pelastustoimi RSS feed and creates sensor entities per municipality.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
+from email.utils import parsedate_to_datetime
 
 import feedparser
 import voluptuous as vol
@@ -28,9 +29,11 @@ from .const import (
     ATTR_PUB_DATE,
     ATTR_TITLE,
     CONF_INTERVAL,
+    CONF_MAX_AGE,
     CONF_MAX_ALARMS,
     CONF_MUNICIPALITIES,
     COORDINATOR,
+    DEFAULT_MAX_AGE,
     DEFAULT_INTERVAL,
     DEFAULT_MAX_ALARMS,
     DOMAIN,
@@ -100,6 +103,9 @@ class PelastustoimiCoordinator:
             1,
         )
         _LOGGER.debug("self._max_alarms = %r (type: %s)", self._max_alarms, type(self._max_alarms).__name__)
+        raw_max_age = entry.options.get(CONF_MAX_AGE, DEFAULT_MAX_AGE)
+        self._max_age_hours = max(int(raw_max_age), 0)
+        _LOGGER.debug("max_age_hours = %r", self._max_age_hours)
         self._municipalities: list[str] = entry.options.get(
             CONF_MUNICIPALITIES, []
         )
@@ -149,6 +155,10 @@ class PelastustoimiCoordinator:
                     len(stored),
                 )
 
+        # Filter alarms by max_age after loading (attribute list only;
+        # seen keys are kept to avoid re-firing events for feed-stale items)
+        self._filter_old_alarms()
+
         async def _initial_poll(_: Event | None = None) -> None:
             await self._async_update()
             self._remove_interval = async_track_time_interval(
@@ -186,7 +196,7 @@ class PelastustoimiCoordinator:
             return
 
         _alarms_added = 0
-
+        current_feed_keys: dict[str, set[str]] = {}
         for item in feed.entries:
             title = item.get("title", "")
             description = item.get("description", "")
@@ -207,6 +217,11 @@ class PelastustoimiCoordinator:
             incident_type = self._parse_incident_type(title)
 
             alarm_key = f"{title}|{pub_date_str}"
+
+            # Track which feed keys are still in the feed for this municipality
+            if label not in current_feed_keys:
+                current_feed_keys[label] = set()
+            current_feed_keys[label].add(alarm_key)
 
             alarm_data: dict[str, Any] = {
                 ATTR_TITLE: title,
@@ -253,9 +268,14 @@ class PelastustoimiCoordinator:
                     },
                 )
 
-        if _alarms_added > 0:
-            # Persist seen alarm keys and alarm data to survive restarts
-            store_data: dict[str, dict[str, Any]] = {}
+
+
+        # Filter alarms by max_age after processing new entries
+        filtered_something = self._filter_old_alarms(current_feed_keys)
+
+        if _alarms_added > 0 or filtered_something:
+            # Persist the (possibly filtered) state to store
+            store_data = {}
             for label, seen_set in self._seen_alarms.items():
                 store_data[label] = {
                     "seen": sorted(seen_set),
@@ -276,6 +296,56 @@ class PelastustoimiCoordinator:
             "RSS poll complete: %d municipalities tracked",
             len(self.alarms),
         )
+
+    def _filter_old_alarms(
+        self, current_feed_keys: dict[str, set[str]] | None = None
+    ) -> bool:
+        """Remove alarms older than max_age_hours from the attribute list.
+
+        When current_feed_keys is provided (poll path), also removes the
+        corresponding seen keys if the alarm is confirmed absent from the
+        current feed — preventing re-fire on the next poll.
+        When None (store-load path), seen keys are preserved to avoid
+        re-firing events for alarms still in the feed.
+
+        Returns True if any alarms were removed.
+        """
+        if not self._max_age_hours:
+            return False
+
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=self._max_age_hours)
+        removed_any = False
+
+        for label in list(self.alarms.keys()):
+            filtered: list[dict[str, Any]] = []
+            removed_keys: set[str] = set()
+
+            for alarm in self.alarms[label]:
+                pub_date_str = alarm.get(ATTR_PUB_DATE, "")
+                try:
+                    pub_date = parsedate_to_datetime(pub_date_str)
+                    if pub_date.tzinfo is None:
+                        pub_date = pub_date.replace(tzinfo=timezone.utc)
+                    if pub_date >= cutoff:
+                        filtered.append(alarm)
+                    else:
+                        # Track removed alarm key for potential seen-set cleanup
+                        alarm_key = f"{alarm[ATTR_TITLE]}|{pub_date_str}"
+                        removed_keys.add(alarm_key)
+                        removed_any = True
+                except (ValueError, TypeError):
+                    # Can't parse date — keep the alarm
+                    filtered.append(alarm)
+
+            self.alarms[label] = filtered
+
+            # Clean up seen keys only when we know which keys are still
+            # in the current feed (poll path), to avoid re-fire.
+            if current_feed_keys is not None and label in current_feed_keys:
+                safe_to_remove = removed_keys - current_feed_keys[label]
+                self._seen_alarms[label] -= safe_to_remove
+
+        return removed_any
 
     def _parse_municipality(self, title: str) -> str | None:
         """Extract the municipality portion from an RSS title.
